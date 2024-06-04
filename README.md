@@ -23,7 +23,9 @@
 **Перед началом работы над дипломным заданием изучите [Инструкция по экономии облачных ресурсов](https://github.com/netology-code/devops-materials/blob/master/cloudwork.MD).**
 
 ## Схема проекта
-[Schema](https://github.com/netology-code/sys-diplom/blob/diplom-schema/sysadmin.drawio.pdf).
+[Schema-pdf](https://github.com/netology-code/sys-diplom/blob/diplom-schema/sysadmin.drawio.pdf).
+
+![Схема проекта](sysadmin.jpg)
 
 
 ## Инфраструктура
