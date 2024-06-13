@@ -25,7 +25,7 @@
 ## Схема проекта
 [Schema-pdf](https://github.com/netology-code/sys-diplom/blob/diplom-schema/sysadmin.drawio.pdf).
 
-![Схема проекта](sysadmin.jpg)
+![Схема проекта](schema.jpg)
 
 
 ## Инфраструктура
