@@ -152,7 +152,7 @@ ansible -i hosts nginx-web -m systemd -a "name=filebeat state=started" -b
 Предоставлен доступ ко всем веб-интерфейсам:
 
 - **[Сайт через балансировщик](http://158.160.211.70)**
-- **[Zabbix](http://http://51.250.67.111/zabbix)**
+- **[Zabbix](http://51.250.67.111/zabbix)**
 - **[Kibana с логами nginx](http://84.252.129.51:5601)**
 
 ---
