@@ -128,6 +128,5 @@ ansible -i hosts nginx-web -m systemd -a "name=filebeat state=started" -b
 - Сайт через балансировщик
 - Zabbix с настроенными дашбордами
 - Kibana с логами nginx
-```
 
 ---
