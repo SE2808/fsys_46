@@ -149,20 +149,6 @@ ansible -i hosts nginx-web -m systemd -a "name=filebeat state=started" -b
 - **kibana**: 158.160.97.174
 - **load balancer**: 158.160.211.70
 
-## Конфигурационные файлы
-В проекте используются следующие конфигурационные файлы:
-
-### Terraform:
-- `main.tf` - основная конфигурация инфраструктуры
-- `meta.yaml` - метаданные для ВМ
-- `providers.tf` - настройки провайдеров
-- `host-zabbix.tf` - конфигурация Zabbix
-
-### Ansible:
-- `ansible.cfg` - основная конфигурация Ansible
-- `hosts.ini` - инвентарь хостов
-- Плейбуки: `nginx-setup.yaml`, `zabbix-playbook.yaml`, `zabbix-agent-setup.yml`, `elastic-play.yml`, `kibana-play.yaml`, `filebeat-play.yaml`
-
 ## Доступ для проверки
 Предоставлен доступ ко всем веб-интерфейсам:
 
