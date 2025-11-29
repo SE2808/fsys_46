@@ -17,43 +17,94 @@
 
 ## Доступ к сервисам
 
-### Веб-сайт
-```bash
-curl http://158.160.211.70
-```
-**Балансировщик**: 158.160.211.70
+### Веб-сайт через балансировщик
+- **URL**: http://158.160.211.70
+- **Проверка**: `curl http://158.160.211.70`
 
 ### Zabbix (Мониторинг)
-**URL**: http://62.84.127.225/zabbix
+- **URL**: http://62.84.127.225/zabbix
+- **Проверка**: `curl -I http://62.84.127.225/zabbix`
 
 ### Kibana (Визуализация логов)
-**URL**: http://158.160.97.174:5601
+- **URL**: http://158.160.97.174:5601
+- **Проверка**: `curl -I http://158.160.97.174:5601`
 
 ### Bastion host
-**IP**: 158.160.108.103
+- **IP**: 158.160.108.103
 
 ## Развертывание инфраструктуры
 
-### 1. Инициализация Terraform
+### 1. Установка и настройка Terraform
 ```bash
-./terraform init
+wget https://hashicorp-releases.yandexcloud.net/terraform/1.7.3/terraform_1.7.3_linux_amd64.zip
+zcat terraform_1.7.3_linux_amd64.zip > terraform
+chmod 766 terraform
+./terraform -v
+vim ~/.terraformrc
+chmod 664 .terraformrc
 ```
 
-### 2. Применение конфигурации
+### 2. Настройка Yandex Cloud CLI
 ```bash
+curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+yc init
+yc config list
+yc iam create-token
+```
+
+### 3. Генерация SSH ключей
+```bash
+ssh-keygen
+cat ~/.ssh/id_ed25519.pub
+```
+
+### 4. Инициализация и применение Terraform
+```bash
+./terraform init
 ./terraform apply
 ```
 
-## Ansible плейбуки
+## Настройка Ansible
 
-### Настройка nginx
+### Установка и конфигурация
+```bash
+sudo apt install -y ansible
+mkdir -p ~/ansible
+cd ansible/
+# Настройка конфигурационных файлов:
+# - ansible.cfg
+# - hosts.ini
+```
+
+### Добавление SSH ключей на все ВМ
+```bash
+KEY_CONTENT=$(cat ~/.ssh/id_ed25519.pub)
+for vm in vm-web-1 vm-web-2 vm-bastion vm-zabbix vm-elastic vm-kibana; do
+  echo "Добавляем ключ в $vm"
+  yc compute instance add-metadata $vm --metadata ssh-keys="$KEY_CONTENT"
+done
+```
+
+### Проверка подключения
+```bash
+ansible bastion -m ping
+ansible all -m ping
+ansible-inventory --list -i hosts.ini
+```
+
+## Развертывание сервисов через Ansible
+
+### Настройка nginx на веб-серверах
 ```bash
 ansible-playbook -i hosts nginx-setup.yaml
+# Проверка: curl http://158.160.211.70
 ```
 
 ### Установка Zabbix сервера
 ```bash
 ansible-playbook -i hosts zabbix-playbook.yaml
+# Проверка службы:
+ansible -i hosts zabbix -m systemd -a "name=zabbix-server state=started" -b
 ```
 
 ### Настройка Zabbix агентов
@@ -64,39 +115,21 @@ ansible-playbook -i hosts zabbix-agent-setup.yml
 ### Установка Elasticsearch
 ```bash
 ansible-playbook -i hosts elastic-play.yml
+# Проверка службы:
+ansible -i hosts elasticsearch -m systemd -a "name=elasticsearch state=started" -b
 ```
 
 ### Установка Kibana
 ```bash
 ansible-playbook -i hosts kibana-play.yaml
+# Проверка службы:
+ansible -i hosts kibana -m systemd -a "name=kibana state=started" -b
 ```
 
-### Настройка Filebeat
+### Настройка Filebeat для сбора логов
 ```bash
 ansible-playbook -i hosts filebeat-play.yaml
-```
-
-## Проверка служб
-
-### Проверка Zabbix
-```bash
-ansible -i hosts zabbix -m systemd -a "name=zabbix-server state=started" -b
-curl -I http://62.84.127.225/zabbix
-```
-
-### Проверка Elasticsearch
-```bash
-ansible -i hosts elasticsearch -m systemd -a "name=elasticsearch state=started" -b
-```
-
-### Проверка Kibana
-```bash
-ansible -i hosts kibana -m systemd -a "name=kibana state=started" -b
-curl -I http://158.160.97.174:5601
-```
-
-### Проверка Filebeat
-```bash
+# Проверка службы:
 ansible -i hosts nginx-web -m systemd -a "name=filebeat state=started" -b
 ```
 
@@ -116,17 +149,25 @@ ansible -i hosts nginx-web -m systemd -a "name=filebeat state=started" -b
 - **kibana**: 158.160.97.174
 - **load balancer**: 158.160.211.70
 
-## Особенности реализации
-- Использование прерываемых ВМ для экономии (перед проверкой переведены в постоянные)
-- Все ВМ без внешних IP, кроме bastion, zabbix, kibana и балансировщика
-- Настройка Security Groups для ограничения доступа
-- Ежедневное резервное копирование снапшотов с TTL 7 дней
-- Мониторинг по метрикам USE (Utilization, Saturation, Errors)
+## Конфигурационные файлы
+В проекте используются следующие конфигурационные файлы:
+
+### Terraform:
+- `main.tf` - основная конфигурация инфраструктуры
+- `meta.yaml` - метаданные для ВМ
+- `providers.tf` - настройки провайдеров
+- `host-zabbix.tf` - конфигурация Zabbix
+
+### Ansible:
+- `ansible.cfg` - основная конфигурация Ansible
+- `hosts.ini` - инвентарь хостов
+- Плейбуки: `nginx-setup.yaml`, `zabbix-playbook.yaml`, `zabbix-agent-setup.yml`, `elastic-play.yml`, `kibana-play.yaml`, `filebeat-play.yaml`
 
 ## Доступ для проверки
 Предоставлен доступ ко всем веб-интерфейсам:
-- Сайт через балансировщик
-- Zabbix с настроенными дашбордами
-- Kibana с логами nginx
+
+- **[Сайт через балансировщик](http://158.160.211.70)**
+- **[Zabbix с настроенными дашбордами](http://62.84.127.225)**
+- **[Kibana с логами nginx](http://158.160.97.174:5601)**
 
 ---
