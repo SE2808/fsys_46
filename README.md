@@ -153,6 +153,9 @@ ansible -i hosts nginx-web -m systemd -a "name=filebeat state=started" -b
 
 - **[Сайт через балансировщик](http://158.160.211.70)**
 - **[Zabbix](http://51.250.67.111/zabbix)**
+```bash
+log: Admin pass: zabbix
+```
 - **[Kibana с логами nginx](http://84.252.129.51:5601)**
 
 ---
